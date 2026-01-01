@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -12,43 +6,31 @@ datasource db {
   provider = "postgresql"
 }
 
-enum MembershipRole {
-  OWNER
-  ADMIN
-  MEMBER
-}
-
 model User {
-  id            String            @id @default(uuid())
-  email         String            @unique
-  username      String?           @unique
+  id            String           @id @default(uuid())
+  email         String           @unique
+  username      String?          @unique
   passwordHash  String
-  createdAt     DateTime          @default(now())
-  updatedAt     DateTime          @updatedAt
-
-  memberships   RoomMembership[]
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
   messages      Message[]
   refreshTokens RefreshToken[]
-
-  // added opposite relation for Room.createdBy
-  createdRooms  Room[]            @relation("UserCreatedRooms")
+  createdRooms  Room[]           @relation("UserCreatedRooms")
+  memberships   RoomMembership[]
 }
 
 model Room {
-  id          String            @id @default(uuid())
-  name        String
-  slug        String            @unique
-  isPrivate   Boolean           @default(false)
+  id          String           @id @default(uuid())
+  name        String           @unique
+  slug        String           @unique
+  isPrivate   Boolean          @default(false)
   createdById String
-  // name the relation to match User.createdRooms
-  createdBy   User              @relation("UserCreatedRooms", fields: [createdById], references: [id], onDelete: Cascade)
-  createdAt   DateTime          @default(now())
-
-  memberships RoomMembership[]
+  createdAt   DateTime         @default(now())
   messages    Message[]
+  createdBy   User             @relation("UserCreatedRooms", fields: [createdById], references: [id], onDelete: Cascade)
+  memberships RoomMembership[]
 
   @@index([createdAt])
-  @@unique([name])
 }
 
 model RoomMembership {
@@ -57,9 +39,8 @@ model RoomMembership {
   userId   String
   role     MembershipRole @default(MEMBER)
   joinedAt DateTime       @default(now())
-
-  room Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  room     Room           @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  user     User           @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([roomId, userId])
   @@index([userId])
@@ -70,17 +51,16 @@ model Message {
   id              Int      @id @default(autoincrement())
   roomId          String
   userId          String
-  clientMessageId String?  // client-generated UUID for idempotency
+  clientMessageId String?
   content         String
   contentType     String?  @default("text")
   metadata        Json?
   createdAt       DateTime @default(now())
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  room Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  room            Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, clientMessageId], name: "uniq_user_client_msgid")
-  @@index([roomId, createdAt, id], name: "idx_room_createdAt_id")
+  @@index([roomId, createdAt, id], map: "idx_room_createdAt_id")
 }
 
 model RefreshToken {
@@ -90,8 +70,13 @@ model RefreshToken {
   revoked   Boolean  @default(false)
   createdAt DateTime @default(now())
   expiresAt DateTime
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
+}
+
+enum MembershipRole {
+  OWNER
+  ADMIN
+  MEMBER
 }
