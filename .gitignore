@@ -1,3 +1,26 @@
-node_modules
+# Node
+node_modules/
+dist/
+build/
 
-/src/generated/prisma
+# TypeScript
+*.tsbuildinfo
+
+# Env
+.env
+.env.local
+.env.*.local
+
+# Editor/OS
+.vscode/
+.idea/
+.DS_Store
+npm-debug.log
+yarn-error.log
+
+# Prisma
+prisma/dev.db
+
+# Logs
+logs/
+*.log
